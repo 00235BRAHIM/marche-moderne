@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{ $title ?? 'Marche Moderne' }}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        body {
+            font-family: Inter, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900">
+
+<header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-6">
+
+        <a href="{{ route('home') }}" class="font-extrabold text-2xl">
+            <span class="text-indigo-600">Marche</span> Moderne
+        </a>
+
+        <form
+            action="{{ route('products') }}"
+            class="hidden md:flex flex-1 max-w-xl"
+        >
+            <input
+                name="q"
+                value="{{ request('q') }}"
+                placeholder="Rechercher..."
+                class="w-full border rounded-l-xl px-4 py-2"
+            >
+
+            <button class="bg-slate-900 text-white px-5 rounded-r-xl">
+                Chercher
+            </button>
+        </form>
+
+        <nav class="ml-auto flex gap-4 items-center text-sm">
+
+            <a
+                href="{{ route('shops.index') }}"
+                class="font-medium hover:text-indigo-600 transition"
+            >
+                🏪 Nos boutiques
+            </a>
+
+            @if(session('public_shop_slug'))
+                <a
+                    href="{{ route('shop.public', session('public_shop_slug')) }}"
+                    class="font-medium hover:text-indigo-600 transition"
+                >
+                    {{ session('public_shop_name') ?: 'Ma boutique' }}
+                </a>
+            @else
+                <a
+                    href="{{ route('products') }}"
+                    class="font-medium hover:text-indigo-600 transition"
+                >
+                    Boutique
+                </a>
+            @endif
+
+            @auth
+
+                <a href="{{ route('cart') }}" class="inline-flex items-center gap-2">
+                    <span>🛒 Panier</span>
+                    @php
+                        $cartCount = auth()->user()->cart?->items->sum('quantity') ?? 0;
+                    @endphp
+                    @if($cartCount > 0)
+                        <span class="inline-flex min-w-[22px] h-[22px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                            {{ $cartCount }}
+                        </span>
+                    @endif
+                </a>
+
+                @if(auth()->user()->isVendor())
+                    <div class="relative" id="vendorNotificationWrapper">
+                        <button
+                            type="button"
+                            id="vendorNotificationButton"
+                            class="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition"
+                            title="Notifications"
+                        >
+                            <span class="text-xl">🔔</span>
+
+                            <span
+                                id="vendorNotificationCount"
+                                class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-bold items-center justify-center"
+                            >0</span>
+                        </button>
+
+                        <div
+                            id="vendorNotificationPanel"
+                            class="hidden absolute right-0 top-12 w-[380px] max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50"
+                        >
+                            <div class="px-4 py-3 border-b flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-900">
+                                        Notifications
+                                    </h3>
+                                    <p class="text-xs text-slate-500">
+                                        Nouvelles commandes
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    id="vendorNotificationReadAll"
+                                    class="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                >
+                                    Tout lire
+                                </button>
+                            </div>
+
+                            <div
+                                id="vendorNotificationList"
+                                class="max-h-[420px] overflow-y-auto"
+                            >
+                                <div class="p-6 text-center text-sm text-slate-500">
+                                    Chargement...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if(auth()->user()->role === 'customer')
+                    <div class="relative" id="customerNotificationWrapper">
+                        <button
+                            type="button"
+                            id="customerNotificationButton"
+                            class="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition"
+                            title="Notifications"
+                        >
+                            <span class="text-xl">🔔</span>
+
+                            <span
+                                id="customerNotificationCount"
+                                class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-bold items-center justify-center"
+                            >0</span>
+                        </button>
+
+                        <div
+                            id="customerNotificationPanel"
+                            class="hidden absolute right-0 top-12 w-[390px] max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50"
+                        >
+                            <div class="px-4 py-3 border-b flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-slate-900">
+                                        Notifications
+                                    </h3>
+                                    <p class="text-xs text-slate-500">
+                                        Suivi de vos commandes
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    id="customerNotificationReadAll"
+                                    class="text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+                                >
+                                    Tout lire
+                                </button>
+                            </div>
+
+                            <div
+                                id="customerNotificationList"
+                                class="max-h-[420px] overflow-y-auto"
+                            >
+                                <div class="p-6 text-center text-sm text-slate-500">
+                                    Chargement...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <a href="{{ route('dashboard') }}">
+                    Dashboard
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+
+                    <button>
+                        Déconnecter
+                    </button>
+                </form>
+
+            @else
+
+                <a href="{{ route('login') }}">
+                    Connexion
+                </a>
+
+                <a
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-xl"
+                    href="{{ route('register') }}"
+                >
+                    Créer un compte
+                </a>
+
+            @endauth
+
+        </nav>
+    </div>
+</header>
+
+
+@if(session('warning'))
+    <div class="max-w-7xl mx-auto px-4 pt-4">
+        <div class="bg-amber-50 text-amber-800 p-3 rounded-xl">
+            {{ session('warning') }}
+        </div>
+    </div>
+@endif
+
+
+@if(session('success'))
+    <div class="max-w-7xl mx-auto px-4 pt-4">
+        <div class="bg-emerald-50 text-emerald-700 p-3 rounded-xl">
+            {{ session('success') }}
+        </div>
+    </div>
+@endif
+
+
+@if($errors->any())
+    <div class="max-w-7xl mx-auto px-4 pt-4">
+        <div class="bg-red-50 text-red-700 p-3 rounded-xl">
+            {{ $errors->first() }}
+        </div>
+    </div>
+@endif
+
+
+@yield('content')
+
+
+<footer class="mt-20 border-t bg-white">
+    <div class="max-w-7xl mx-auto px-4 py-10 flex justify-between">
+
+        <b>
+            <span class="text-indigo-600">Marche</span> Moderne
+        </b>
+
+        <span class="text-slate-400">
+            © {{ date('Y') }}
+        </span>
+
+    </div>
+</footer>
+
+
+@if(auth()->check() && auth()->user()->isVendor())
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('vendorNotificationButton');
+    const panel = document.getElementById('vendorNotificationPanel');
+    const wrapper = document.getElementById('vendorNotificationWrapper');
+    const count = document.getElementById('vendorNotificationCount');
+    const list = document.getElementById('vendorNotificationList');
+    const readAllButton = document.getElementById('vendorNotificationReadAll');
+
+    if (!button || !panel || !wrapper || !count || !list) {
+        return;
+    }
+
+    async function loadVendorNotifications() {
+        try {
+            const response = await fetch('{{ route('vendor.notifications') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+
+            if (data.count > 0) {
+                count.textContent = data.count > 99 ? '99+' : data.count;
+                count.classList.remove('hidden');
+                count.classList.add('flex');
+            } else {
+                count.classList.add('hidden');
+                count.classList.remove('flex');
+            }
+
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="p-10 text-center">
+                        <div class="w-14 h-14 mx-auto rounded-full bg-slate-100
+                                    flex items-center justify-center text-2xl mb-3">
+                            🔕
+                        </div>
+
+                        <p class="font-semibold text-slate-700">
+                            Aucune nouvelle commande
+                        </p>
+
+                        <p class="text-xs text-slate-400 mt-1">
+                            Les nouvelles commandes apparaîtront ici.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = data.notifications.map(notification => {
+
+                const total = new Intl.NumberFormat('fr-FR').format(
+                    Number(notification.total || 0)
+                );
+
+                const isPayment = notification.type === 'vendor_payment_proof';
+
+                const isSubscription =
+                    notification.type === 'vendor_subscription_approved'
+                    || [
+                        'subscription_approved',
+                        'subscription_activated',
+                        'subscription_expired',
+                        'subscription_cancelled'
+                    ].includes(notification.event);
+
+                const isCertification =
+                    notification.type === 'vendor_certification'
+                    || [
+                        'certification_approved',
+                        'certification_rejected',
+                        'certification_suspended'
+                    ].includes(notification.event);
+
+                const title =
+                    notification.title
+                    || (isPayment
+                        ? 'Nouvelle preuve de paiement'
+                        : isSubscription
+                            ? 'Abonnement'
+                            : isCertification
+                                ? 'Certification vendeur'
+                                : 'Nouvelle commande');
+
+                const icon =
+                    notification.icon
+                    || (isPayment
+                        ? '💳'
+                        : isSubscription
+                            ? '📋'
+                            : isCertification
+                                ? '📄'
+                                : '🛒');
+
+                const iconClass =
+                    isPayment
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : isSubscription
+                            ? 'bg-green-100 text-green-700'
+                            : isCertification
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-indigo-100 text-indigo-700';
+
+                const message =
+                    notification.message
+                    || (isPayment
+                        ? 'Le client a envoyé une nouvelle preuve de paiement.'
+                        : isSubscription
+                            ? 'Une mise à jour concernant votre abonnement est disponible.'
+                            : isCertification
+                                ? 'Une mise à jour concernant votre certification est disponible.'
+                                : 'Une nouvelle commande vous a été attribuée.');
+
+                const orderNumber =
+                    notification.vendor_order_number
+                    || notification.order_number
+                    || '';
+
+                const showOrderInfo = !isSubscription && !isCertification;
+                const showAmount = !isSubscription && !isCertification;
+                const showProvider = isPayment && notification.provider;
+
+                const actionText =
+                    isPayment || (!isSubscription && !isCertification)
+                        ? 'Voir la commande'
+                        : isSubscription
+                            ? 'Ouvrir mon espace vendeur'
+                            : 'Voir ma certification';
+
+                return `
+                    <div
+                        class="group border-b border-slate-100 last:border-b-0
+                               ${notification.read ? 'bg-white' : 'bg-indigo-50/70'}
+                               hover:bg-slate-50 transition"
+                    >
+                        <a
+                            href="${notification.url}"
+                            class="block p-4"
+                            data-vendor-notification-link
+                            data-id="${notification.id}"
+                        >
+                            <div class="flex gap-3">
+
+                                <div class="w-11 h-11 rounded-2xl ${iconClass}
+                                            flex items-center justify-center text-xl
+                                            flex-shrink-0 shadow-sm">
+                                    ${icon}
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+
+                                    <div class="flex items-start justify-between gap-2">
+
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900">
+                                                ${title}
+                                            </p>
+
+                                            ${
+                                                isPayment
+                                                    ? `
+                                                        <p class="text-sm text-slate-600 mt-1">
+                                                            ${notification.customer_name || 'Client'}
+                                                        </p>
+                                                    `
+                                                    : ''
+                                            }
+                                        </div>
+
+                                        ${
+                                            !notification.read
+                                                ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5 shadow-sm"></span>'
+                                                : ''
+                                        }
+
+                                    </div>
+
+                                    ${
+                                        showOrderInfo
+                                            ? `
+                                                <p class="text-xs text-slate-500 mt-2">
+                                                    Commande
+                                                    <span class="font-semibold text-slate-700">
+                                                        ${orderNumber || '-'}
+                                                    </span>
+                                                </p>
+                                            `
+                                            : ''
+                                    }
+
+                                    ${
+                                        showAmount
+                                            ? `
+                                                <div class="flex flex-wrap items-center gap-3 mt-3">
+                                                    <span class="text-sm font-bold text-indigo-600">
+                                                        ${total} FCFA
+                                                    </span>
+
+                                                    ${
+                                                        showProvider
+                                                            ? `
+                                                                <span class="text-[11px] text-slate-400">
+                                                                    💳 ${
+                                                                        notification.provider === 'airtel_money'
+                                                                            ? 'Airtel Money'
+                                                                            : 'Moov Money'
+                                                                    }
+                                                                </span>
+                                                            `
+                                                            : ''
+                                                    }
+
+                                                    <span class="text-[11px] text-slate-400">
+                                                        📅 ${notification.created_at}
+                                                    </span>
+
+                                                    <span class="text-[11px] text-slate-400">
+                                                        🕐 ${notification.time}
+                                                    </span>
+                                                </div>
+                                            `
+                                            : `
+                                                <div class="mt-2">
+                                                    <span class="text-[11px] text-slate-400">
+                                                        📅 ${notification.created_at}
+                                                    </span>
+
+                                                    <span class="text-[11px] text-slate-400 ml-2">
+                                                        🕐 ${notification.time}
+                                                    </span>
+                                                </div>
+                                            `
+                                    }
+
+                                    <p class="text-xs text-slate-600 mt-2">
+                                        ${message}
+                                    </p>
+
+                                    <div class="mt-3 inline-flex items-center gap-1
+                                                text-xs font-bold text-indigo-600
+                                                group-hover:text-indigo-800">
+
+                                        ${actionText}
+
+                                        <span class="transition-transform
+                                                     group-hover:translate-x-1">
+                                            →
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </a>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('[data-vendor-notification-link]')
+                .forEach(link => {
+                    link.addEventListener('click', async function () {
+                        try {
+                            await deleteVendorNotification(this.dataset.id);
+                        } catch (error) {
+                            console.error('Suppression notification vendeur:', error);
+                        }
+                    });
+                });
+
+        } catch (error) {
+            console.error('Notifications vendeur:', error);
+
+            list.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="text-2xl mb-2">⚠️</div>
+
+                    <p class="text-sm text-red-500">
+                        Impossible de charger les notifications.
+                    </p>
+                </div>
+            `;
+        }
+    }
+
+    async function deleteVendorNotification(id) {
+        const response = await fetch(
+            '{{ url('/vendor/notifications') }}/' + id + '/read',
+            {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de supprimer la notification.');
+        }
+
+        await loadVendorNotifications();
+    }
+
+    if (readAllButton) {
+        readAllButton.textContent = 'Tout effacer';
+
+        readAllButton.addEventListener('click', async function () {
+            try {
+                const response = await fetch(
+                    '{{ route('vendor.notifications.read-all') }}',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Impossible de supprimer les notifications.');
+                }
+
+                await loadVendorNotifications();
+
+            } catch (error) {
+                console.error('Suppression notifications vendeur:', error);
+            }
+        });
+    }
+
+    button.addEventListener('click', function (event) {
+        event.stopPropagation();
+
+        panel.classList.toggle('hidden');
+
+        if (!panel.classList.contains('hidden')) {
+            loadVendorNotifications();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!wrapper.contains(event.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+
+    loadVendorNotifications();
+
+    setInterval(loadVendorNotifications, 10000);
+});
+</script>
+@endif
+
+
+@if(auth()->check() && auth()->user()->role === 'customer')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('customerNotificationButton');
+    const panel = document.getElementById('customerNotificationPanel');
+    const wrapper = document.getElementById('customerNotificationWrapper');
+    const count = document.getElementById('customerNotificationCount');
+    const list = document.getElementById('customerNotificationList');
+    const readAllButton = document.getElementById('customerNotificationReadAll');
+
+    if (!button || !panel || !wrapper || !count || !list) {
+        return;
+    }
+
+    async function loadCustomerNotifications() {
+        try {
+            const response = await fetch('{{ route('notifications') }}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+
+            if (data.count > 0) {
+                count.textContent = data.count > 99 ? '99+' : data.count;
+                count.classList.remove('hidden');
+                count.classList.add('flex');
+            } else {
+                count.classList.add('hidden');
+                count.classList.remove('flex');
+            }
+
+            if (!data.notifications || data.notifications.length === 0) {
+                list.innerHTML = `
+                    <div class="p-10 text-center">
+                        <div class="w-14 h-14 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-2xl mb-3">
+                            🔕
+                        </div>
+                        <p class="font-semibold text-slate-700">Aucune notification</p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Vous serez informé des mises à jour de vos commandes.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = data.notifications.map(notification => {
+                const total = new Intl.NumberFormat('fr-FR').format(
+                    Number(notification.total || 0)
+                );
+
+                let iconBg = 'bg-indigo-100';
+                let iconText = 'text-indigo-700';
+
+                if (notification.event === 'payment_approved') {
+                    iconBg = 'bg-emerald-100';
+                    iconText = 'text-emerald-700';
+                } else if (notification.event === 'payment_rejected') {
+                    iconBg = 'bg-red-100';
+                    iconText = 'text-red-700';
+                } else if (notification.event === 'delivered') {
+                    iconBg = 'bg-blue-100';
+                    iconText = 'text-blue-700';
+                }
+
+                return `
+                    <div
+                        class="group border-b border-slate-100 last:border-b-0
+                               ${notification.read ? 'bg-white' : 'bg-indigo-50/70'}
+                               hover:bg-slate-50 transition"
+                    >
+                        <a
+                            href="${notification.url}"
+                            class="block p-4"
+                            data-customer-notification-link
+                            data-id="${notification.id}"
+                        >
+                            <div class="flex gap-3">
+                                <div class="w-11 h-11 rounded-2xl ${iconBg} ${iconText}
+                                            flex items-center justify-center text-xl
+                                            flex-shrink-0 shadow-sm">
+                                    ${notification.icon || '🔔'}
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <p class="font-bold text-sm text-slate-900">
+                                                ${notification.title || 'Mise à jour'}
+                                            </p>
+
+                                            <p class="text-xs text-slate-500 mt-1">
+                                                Commande
+                                                <span class="font-semibold text-slate-700">
+                                                    ${notification.order_number || '-'}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        ${
+                                            !notification.read
+                                            ? '<span class="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0 mt-1.5 shadow-sm"></span>'
+                                            : ''
+                                        }
+                                    </div>
+
+                                    ${
+                                        notification.message
+                                        ? `<p class="text-xs text-slate-600 mt-2 leading-5">
+                                            ${notification.message}
+                                           </p>`
+                                        : ''
+                                    }
+
+                                    <div class="flex flex-wrap items-center gap-3 mt-3">
+                                        <span class="text-sm font-bold text-indigo-600">
+                                            ${total} FCFA
+                                        </span>
+
+                                        <span class="text-[11px] text-slate-400">
+                                            📅 ${notification.created_at}
+                                        </span>
+
+                                        <span class="text-[11px] text-slate-400">
+                                            🕐 ${notification.time}
+                                        </span>
+                                    </div>
+
+                                    <div class="mt-3 inline-flex items-center gap-1
+                                                text-xs font-bold text-indigo-600
+                                                group-hover:text-indigo-800">
+                                        Voir la commande
+                                        <span class="transition-transform group-hover:translate-x-1">→</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('[data-customer-notification-link]')
+                .forEach(link => {
+                    link.addEventListener('click', async function () {
+                        try {
+                            await deleteNotification(this.dataset.id);
+                        } catch (error) {
+                            console.error('Suppression notification:', error);
+                        }
+                    });
+                });
+
+        } catch (error) {
+            console.error('Notifications client:', error);
+
+            list.innerHTML = `
+                <div class="p-8 text-center">
+                    <div class="text-2xl mb-2">⚠️</div>
+                    <p class="text-sm text-red-500">
+                        Impossible de charger les notifications.
+                    </p>
+                </div>
+            `;
+        }
+    }
+
+    async function deleteNotification(id) {
+        const response = await fetch(
+            '{{ url('/notifications') }}/' + id + '/read',
+            {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Impossible de supprimer la notification.');
+        }
+
+        await loadCustomerNotifications();
+    }
+
+    if (readAllButton) {
+        readAllButton.addEventListener('click', async function () {
+            try {
+                const response = await fetch(
+                    '{{ route('notifications.read-all') }}',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Impossible de supprimer les notifications.');
+                }
+
+                await loadCustomerNotifications();
+
+            } catch (error) {
+                console.error('Suppression notifications:', error);
+            }
+        });
+    }
+
+    button.addEventListener('click', function (event) {
+        event.stopPropagation();
+        panel.classList.toggle('hidden');
+
+        if (!panel.classList.contains('hidden')) {
+            loadCustomerNotifications();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!wrapper.contains(event.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+
+    loadCustomerNotifications();
+
+    setInterval(loadCustomerNotifications, 10000);
+});
+</script>
+@endif
+</body>
+</html>
+
+

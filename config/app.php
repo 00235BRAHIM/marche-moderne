@@ -1,0 +1,1 @@
+<?php return ['name'=>env('APP_NAME','Marche Moderne'),'env'=>env('APP_ENV','production'),'debug'=>(bool)env('APP_DEBUG',false),'url'=>env('APP_URL','http://localhost'),'timezone'=>'Africa/Ndjamena','locale'=>'fr','fallback_locale'=>'fr','key'=>env('APP_KEY'),'cipher'=>'AES-256-CBC'];

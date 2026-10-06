@@ -1,0 +1,7 @@
+@extends('layouts.app') @section('content')<div class="max-w-7xl mx-auto px-4 py-10"><div class="flex gap-8"><aside class="hidden md:block w-60 bg-white border rounded-2xl p-5 h-fit"><b>Catégories</b><div class="space-y-2 mt-4"><a href="{{ route('products') }}" class="block">Toutes</a>@foreach($categories as $c)<a class="block text-slate-600" href="{{ route('products',['category'=>$c->id]) }}">{{ $c->name }}</a>@endforeach</div></aside><main class="flex-1"><div class="text-center md:text-left"><h1 class="text-3xl font-extrabold">Nos produits</h1><p class="text-slate-500 mt-1">{{ $products->total() }} résultat(s)</p></div><div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mt-7">@forelse($products as $p)<a href="{{ route('product.show',$p) }}" class="bg-white border rounded-2xl overflow-hidden hover:shadow-xl"><div class="aspect-square bg-slate-100 overflow-hidden flex items-center justify-center">
+@if($p->image)
+<img src="{{ asset('storage/'.$p->image) }}" alt="{{ $p->name }}" class="w-full h-full object-cover">
+@else
+<span class="text-6xl">🛍️</span>
+@endif
+</div><div class="p-4"><small class="text-slate-400">{{ $p->category->name }}</small><h3 class="font-bold">{{ $p->name }}</h3><b>{{ number_format($p->price,0,',',' ') }} FCFA</b><p class="text-xs text-slate-400">Stock: {{ $p->stock }}</p></div></a>@empty<p>Aucun produit.</p>@endforelse</div><div class="mt-7">{{ $products->links() }}</div></main></div></div>@endsection

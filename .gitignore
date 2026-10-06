@@ -1,0 +1,46 @@
+/vendor
+/node_modules
+/public/build
+.env
+.phpunit.result.cache
+/storage/*.key
+
+# Laravel runtime files
+/storage/framework/
+/storage/logs/
+
+# Private payment proofs
+/storage/app/public/manual-payments/
+
+# Private vendor certification documents
+/storage/app/public/vendor-certifications/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+/node_modules/
+
+# Build
+/public/build/
+# Fichiers accidentels / temporaires
+/45000
+/AppNotificationsCustomerOrderStatusNotification
+/Ibrahim
+/Le
+/SK-M6ENMJT8-V2
+/SK-XXXXXXXX
+/null
+/payment_approved
+# Fichiers accidentels / temporaires
+/45000
+/AppNotificationsCustomerOrderStatusNotification
+/Ibrahim
+/Le
+/SK-M6ENMJT8-V2
+/SK-XXXXXXXX
+/null
+/payment_approved

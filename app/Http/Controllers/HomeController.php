@@ -1,0 +1,5 @@
+<?php namespace App\Http\Controllers;use App\Models\{Product,Category};use Illuminate\Http\Request;class HomeController extends Controller{public function index(){
+        // L'accueil général quitte le contexte d'une boutique publique.
+        session()->forget(['public_shop_slug', 'public_shop_name']);
+
+return view('home',['featured'=>Product::with('category')->where('is_active',1)->where('is_archived',false)->where('featured',1)->latest()->take(8)->get(),'categories'=>Category::where('is_active',1)->withCount('products')->get()]);}public function products(Request $r){$q=Product::with('category')->where('is_active',1)->where('is_archived',false);if($r->filled('q'))$q->where('name','like','%'.$r->q.'%');if($r->filled('category'))$q->where('category_id',$r->category);return view('products.index',['products'=>$q->latest()->paginate(12)->withQueryString(),'categories'=>Category::where('is_active',1)->get()]);}public function show(Product $product){abort_unless($product->is_active && !$product->is_archived,404);return view('products.show',compact('product'));}}
