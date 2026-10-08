@@ -607,6 +607,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
+            checkVendorNotificationSound(data.notifications);
+
             updateCount(data.count);
 
             if (!data.notifications || data.notifications.length === 0) {
@@ -974,6 +976,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = await response.json();
 
+            checkCustomerNotificationSound(data.notifications);
+
             if (data.count > 0) {
                 updateCustomerCount(data.count);
             } else {
@@ -1267,6 +1271,127 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endif
+
+<audio id="notificationSound" preload="auto">
+    <source src="{{ asset('sounds/notification.mp3') }}" type="audio/mpeg">
+</audio>
+
+<script>
+(function () {
+    'use strict';
+
+    const sound = document.getElementById('notificationSound');
+
+    let soundUnlocked = false;
+    let vendorInitialized = false;
+    let customerInitialized = false;
+    let vendorIds = new Set();
+    let customerIds = new Set();
+
+    if (sound) {
+        sound.volume = 0.65;
+        sound.load();
+    }
+
+    function unlockSound() {
+        if (soundUnlocked || !sound) return;
+
+        sound.volume = 0;
+
+        const p = sound.play();
+
+        if (p !== undefined) {
+            p.then(function () {
+                sound.pause();
+                sound.currentTime = 0;
+                sound.volume = 0.65;
+                soundUnlocked = true;
+            }).catch(function () {
+                sound.pause();
+                sound.currentTime = 0;
+                sound.volume = 0.65;
+            });
+        }
+    }
+
+    ['click', 'touchstart', 'keydown'].forEach(function (event) {
+        document.addEventListener(event, unlockSound, {
+            once: true,
+            passive: true
+        });
+    });
+
+    window.playNewNotificationSound = function () {
+        if (!sound) return;
+
+        sound.currentTime = 0;
+        sound.volume = 0.65;
+
+        sound.play().catch(function () {});
+    };
+
+    window.checkVendorNotificationSound = function (notifications) {
+        if (!Array.isArray(notifications)) return;
+
+        const ids = new Set(
+            notifications.map(function (n) {
+                return String(n.id);
+            })
+        );
+
+        if (!vendorInitialized) {
+            vendorIds = ids;
+            vendorInitialized = true;
+            return;
+        }
+
+        let isNew = false;
+
+        ids.forEach(function (id) {
+            if (!vendorIds.has(id)) {
+                isNew = true;
+            }
+        });
+
+        if (isNew) {
+            window.playNewNotificationSound();
+        }
+
+        vendorIds = ids;
+    };
+
+    window.checkCustomerNotificationSound = function (notifications) {
+        if (!Array.isArray(notifications)) return;
+
+        const ids = new Set(
+            notifications.map(function (n) {
+                return String(n.id);
+            })
+        );
+
+        if (!customerInitialized) {
+            customerIds = ids;
+            customerInitialized = true;
+            return;
+        }
+
+        let isNew = false;
+
+        ids.forEach(function (id) {
+            if (!customerIds.has(id)) {
+                isNew = true;
+            }
+        });
+
+        if (isNew) {
+            window.playNewNotificationSound();
+        }
+
+        customerIds = ids;
+    };
+})();
+</script>
+
 </body>
 </html>
 

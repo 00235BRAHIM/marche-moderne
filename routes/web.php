@@ -82,4 +82,4 @@ Route::prefix('admin')->name('admin.')->middleware('role:admin,super_admin')->gr
         Route::post('/plans/{plan}/toggle',[AdminController::class,'togglePlan'])->name('plans.toggle');
     });
 });
-
+Route::get('/admin/notifications/poll', [\App\Http\Controllers\Admin\AdminNotificationController::class, 'poll'])->name('admin.notifications.poll');

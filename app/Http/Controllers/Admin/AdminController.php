@@ -189,6 +189,7 @@ class AdminController extends Controller {
             'subscription',
             'order'
         ])
+        ->whereNotNull('vendor_subscription_id')
         ->when($search !== '', function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
 
