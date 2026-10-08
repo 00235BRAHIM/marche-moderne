@@ -234,8 +234,12 @@ class VendorOrderController extends Controller
      * Le stock est réservé/diminué au moment où le vendeur
      * accepte réellement la commande.
      */
-    public function acceptCashOnDelivery(VendorOrder $vendorOrder)
+    public function acceptCashOnDelivery(Request $request, VendorOrder $vendorOrder)
     {
+        $data = $request->validate([
+            'clando_name' => 'required|string|max:150',
+            'clando_phone' => 'required|string|max:30',
+        ]);
         abort_unless(
             $vendorOrder->vendor_id == auth()->id(),
             403
@@ -259,7 +263,7 @@ class VendorOrderController extends Controller
             'Cette commande a déjà été traitée.'
         );
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($vendorOrder) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($vendorOrder, $data) {
 
             $lockedOrder = VendorOrder::whereKey($vendorOrder->id)
                 ->lockForUpdate()
@@ -309,6 +313,8 @@ class VendorOrderController extends Controller
             $lockedOrder->update([
                 'status' => 'processing',
                 'payment_status' => 'pending',
+                'clando_name' => $data['clando_name'],
+                'clando_phone' => $data['clando_phone'],
             ]);
 
             $vendorOrder = $lockedOrder;
@@ -320,13 +326,15 @@ class VendorOrderController extends Controller
             new CustomerOrderStatusNotification(
                 $vendorOrder,
                 'order_accepted',
-                'Votre commande a été acceptée par le vendeur. Elle sera payée à la livraison.'
+                'Votre commande a été acceptée par le vendeur. Elle sera payée à la livraison. '
+                . '🛵 Clando : ' . $vendorOrder->clando_name
+                . ' — 📞 ' . $vendorOrder->clando_phone
             )
         );
 
         return back()->with(
             'success',
-            'Commande acceptée. Le stock a été mis à jour et le paiement sera encaissé à la livraison.'
+            'Commande acceptée. Le Clando a été enregistré et le stock a été mis à jour.'
         );
     }
 

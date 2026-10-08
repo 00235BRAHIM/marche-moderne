@@ -279,7 +279,7 @@
 
                         <div
                             id="customerNotificationPanel"
-                            class="hidden absolute right-0 top-12 w-[390px] max-w-[90vw] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50"
+                            class="hidden fixed right-6 top-[82px] w-[390px] max-w-[calc(100vw-32px)] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-[99999] pointer-events-none"
                         >
                             <div class="px-4 py-3 border-b flex items-center justify-between">
                                 <div>
@@ -487,13 +487,7 @@
 @endif
 
 
-@if(session('success'))
-    <div class="max-w-7xl mx-auto px-4 pt-4">
-        <div class="bg-emerald-50 text-emerald-700 p-3 rounded-xl">
-            {{ session('success') }}
-        </div>
-    </div>
-@endif
+
 
 
 @if($errors->any())
@@ -928,23 +922,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /*
+     * ========================================================
+     * NOTIFICATIONS CLIENT - GESTION DES PANNEAUX
+     * ========================================================
+     */
+
     function closeCustomerPanels() {
-        [panel, mobilePanel].forEach(function (element) {
-            if (element) {
-                element.classList.add('hidden');
-            }
+        [panel, mobilePanel].forEach(function (currentPanel) {
+            if (!currentPanel) return;
+
+            currentPanel.classList.add('hidden');
+            currentPanel.style.display = 'none';
+            currentPanel.style.pointerEvents = 'none';
         });
     }
 
     function toggleCustomerPanel(targetPanel) {
         if (!targetPanel) return;
 
-        const isHidden = targetPanel.classList.contains('hidden');
+        const wasHidden = targetPanel.classList.contains('hidden');
 
         closeCustomerPanels();
 
-        if (isHidden) {
+        if (wasHidden) {
             targetPanel.classList.remove('hidden');
+
+            /*
+             * IMPORTANT :
+             * Le panneau doit redevenir cliquable après
+             * avoir été fermé.
+             */
+            targetPanel.style.display = 'block';
+            targetPanel.style.pointerEvents = 'auto';
+            targetPanel.style.zIndex = '99999';
         }
     }
 
@@ -1083,18 +1094,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             document.querySelectorAll('[data-customer-notification-link]')
                 .forEach(link => {
-                    link.addEventListener('click', async function (event) {
+                    link.addEventListener('click', function (event) {
                         event.preventDefault();
+                        event.stopPropagation();
 
                         const notificationId = this.dataset.id;
                         const targetUrl = this.href;
 
-                        try {
-                            await deleteNotification(notificationId, this);
-                            window.location.href = targetUrl;
-                        } catch (error) {
-                            console.error('Suppression notification:', error);
-                        }
+                        /*
+                         * On ouvre immédiatement la destination.
+                         * Le marquage comme lue se fait en arrière-plan.
+                         * Ainsi, un problème AJAX ne bloque jamais le clic.
+                         */
+                        deleteNotification(notificationId, this).catch(function (error) {
+                            console.error('Erreur notification client:', error);
+                        });
+
+                        window.location.assign(targetUrl);
                     });
                 });
 
@@ -1223,12 +1239,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     button.addEventListener('click', function (event) {
+        event.preventDefault();
         event.stopPropagation();
+
+        const isHidden = panel.classList.contains('hidden');
+
         panel.classList.toggle('hidden');
 
-        if (!panel.classList.contains('hidden')) {
+        if (isHidden) {
             loadCustomerNotifications();
         }
+    });
+
+    panel.addEventListener('click', function (event) {
+        event.stopPropagation();
     });
 
     document.addEventListener('click', function (event) {

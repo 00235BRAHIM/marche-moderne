@@ -277,22 +277,90 @@
                                 </div>
 
                                 <form
-                                    method="POST"
-                                    action="{{ route('vendor.orders.accept-cod', $vendorOrder) }}"
-                                    class="mt-5"
-                                    onsubmit="return confirm('Confirmez-vous l’acceptation de cette commande avec paiement à la livraison ? Le stock sera immédiatement diminué.');"
-                                >
+    method="POST"
+    action="{{ route('vendor.orders.accept-cod', $vendorOrder) }}"
+    class="mt-5"
+>
+    @csrf
 
-                                    @csrf
+    <div class="rounded-2xl border border-amber-200 bg-white p-5 mb-5">
 
-                                    <button
-                                        type="submit"
-                                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-4 font-bold text-white shadow-sm transition hover:bg-amber-700"
-                                    >
-                                        ✓ Accepter la commande
-                                    </button>
+        <div class="flex items-center gap-3 mb-4">
 
-                                </form>
+            <div class="text-3xl">
+                🛵
+            </div>
+
+            <div>
+                <h4 class="text-lg font-bold text-gray-900">
+                    Informations du Clando
+                </h4>
+
+                <p class="text-sm text-gray-500">
+                    Renseignez le livreur chargé de cette commande.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+
+            <div>
+                <label
+                    for="clando_name"
+                    class="block text-sm font-bold text-gray-700 mb-2"
+                >
+                    Nom du Clando *
+                </label>
+
+                <input
+                    type="text"
+                    id="clando_name"
+                    name="clando_name"
+                    value="{{ old('clando_name', $vendorOrder->clando_name) }}"
+                    required
+                    maxlength="150"
+                    class="w-full rounded-xl border-gray-300 focus:border-amber-500 focus:ring-amber-500 px-4 py-3"
+                    placeholder="Exemple : Moussa Mahamat"
+                >
+            </div>
+
+            <div>
+                <label
+                    for="clando_phone"
+                    class="block text-sm font-bold text-gray-700 mb-2"
+                >
+                    Numéro du Clando *
+                </label>
+
+                <input
+                    type="tel"
+                    id="clando_phone"
+                    name="clando_phone"
+                    value="{{ old('clando_phone', $vendorOrder->clando_phone) }}"
+                    required
+                    maxlength="30"
+                    class="w-full rounded-xl border-gray-300 focus:border-amber-500 focus:ring-amber-500 px-4 py-3"
+                    placeholder="Exemple : 66 12 34 56"
+                >
+            </div>
+
+        </div>
+
+        <p class="mt-3 text-xs text-gray-500">
+            * Le nom et le numéro du Clando sont obligatoires.
+        </p>
+
+    </div>
+
+    <button
+        type="submit"
+        class="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-4 font-bold text-white shadow-sm transition hover:bg-amber-700"
+    >
+        ✓ Confirmer l'acceptation
+    </button>
+
+</form>
 
                             </div>
 
@@ -322,6 +390,56 @@
                                     Le paiement sera encaissé en espèces lors de la livraison.
                                 </p>
 
+@if($vendorOrder->clando_name || $vendorOrder->clando_phone)
+
+    <div class="mt-5 rounded-2xl border border-blue-200 bg-white p-5">
+
+        <div class="flex items-center gap-3 mb-4">
+
+            <div class="text-3xl">
+                🛵
+            </div>
+
+            <div>
+                <h4 class="font-bold text-blue-900">
+                    Clando chargé de la livraison
+                </h4>
+
+                <p class="text-sm text-blue-700">
+                    Informations du livreur
+                </p>
+            </div>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+
+            <div class="rounded-xl bg-blue-50 p-4">
+                <p class="text-xs uppercase text-blue-600 font-bold">
+                    Nom
+                </p>
+
+                <p class="font-bold text-gray-900 mt-1">
+                    {{ $vendorOrder->clando_name ?? 'Non renseigné' }}
+                </p>
+            </div>
+
+            <div class="rounded-xl bg-blue-50 p-4">
+                <p class="text-xs uppercase text-blue-600 font-bold">
+                    Téléphone
+                </p>
+
+                <p class="font-bold text-gray-900 mt-1">
+                    {{ $vendorOrder->clando_phone ?? 'Non renseigné' }}
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+@endif
+
                             </div>
 
                         </div>
@@ -350,6 +468,52 @@
                                     {{ number_format($vendorOrder->total, 0, ',', ' ') }} FCFA
                                     lors de la livraison.
                                 </p>
+
+@if($vendorOrder->clando_name || $vendorOrder->clando_phone)
+
+    <div class="mt-5 rounded-2xl border border-purple-200 bg-white p-5">
+
+        <div class="flex items-center gap-3 mb-4">
+
+            <div class="text-3xl">
+                🛵
+            </div>
+
+            <div>
+                <h4 class="font-bold text-purple-900">
+                    Clando chargé de la livraison
+                </h4>
+            </div>
+
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+
+            <div class="rounded-xl bg-purple-50 p-4">
+                <p class="text-xs uppercase text-purple-600 font-bold">
+                    Nom
+                </p>
+
+                <p class="font-bold text-gray-900 mt-1">
+                    {{ $vendorOrder->clando_name ?? 'Non renseigné' }}
+                </p>
+            </div>
+
+            <div class="rounded-xl bg-purple-50 p-4">
+                <p class="text-xs uppercase text-purple-600 font-bold">
+                    Téléphone
+                </p>
+
+                <p class="font-bold text-gray-900 mt-1">
+                    {{ $vendorOrder->clando_phone ?? 'Non renseigné' }}
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+@endif
 
                             </div>
 
@@ -529,6 +693,65 @@
                                 method="POST"
                                 onsubmit="return confirm('Confirmez-vous l’acceptation de cette preuve de paiement ?');"
                             >
+                    <div class="mb-6 rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5">
+
+                        <div class="flex items-center gap-3 mb-4">
+
+                            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg">
+                                🛵
+                            </div>
+
+                            <div>
+                                <h3 class="font-extrabold text-indigo-900">
+                                    Clando chargé de la livraison
+                                </h3>
+
+                                <p class="text-sm text-indigo-700">
+                                    Renseignez le livreur avant d'accepter le paiement.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">
+                                    Nom du Clando *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="clando_name"
+                                    required
+                                    maxlength="150"
+                                    placeholder="Ex : Mahamat Ali"
+                                    value="{{ old('clando_name', $vendorOrder->clando_name) }}"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">
+                                    Numéro du Clando *
+                                </label>
+
+                                <input
+                                    type="text"
+                                    name="clando_phone"
+                                    required
+                                    maxlength="30"
+                                    placeholder="Ex : +235 66 00 00 00"
+                                    value="{{ old('clando_phone', $vendorOrder->clando_phone) }}"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
 
                                 @csrf
 

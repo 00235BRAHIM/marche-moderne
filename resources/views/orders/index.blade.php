@@ -227,7 +227,64 @@
 
                                 </div>
 
-                            @endforeach
+                            
+
+                                {{-- CLANDO DE LIVRAISON --}}
+                                @if($vendorOrder->clando_name || $vendorOrder->clando_phone)
+
+                                    <div class="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-4">
+
+                                        <div class="flex items-center gap-3 mb-4">
+
+                                            <div class="w-11 h-11 rounded-xl bg-indigo-100 flex items-center justify-center text-2xl">
+                                                🛵
+                                            </div>
+
+                                            <div>
+                                                <p class="font-extrabold text-indigo-900">
+                                                    Clando chargé de la livraison
+                                                </p>
+
+                                                <p class="text-xs text-indigo-700 mt-1">
+                                                    Livreur affecté à cette boutique
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                                            <div class="bg-white border border-indigo-100 rounded-xl px-4 py-3">
+
+                                                <p class="text-[11px] text-slate-400 font-semibold uppercase">
+                                                    Nom du Clando
+                                                </p>
+
+                                                <p class="text-sm font-extrabold text-slate-800 mt-1">
+                                                    {{ $vendorOrder->clando_name ?? 'Non renseigné' }}
+                                                </p>
+
+                                            </div>
+
+                                            <div class="bg-white border border-indigo-100 rounded-xl px-4 py-3">
+
+                                                <p class="text-[11px] text-slate-400 font-semibold uppercase">
+                                                    Numéro du Clando
+                                                </p>
+
+                                                <p class="text-sm font-extrabold text-indigo-700 mt-1">
+                                                    📞 {{ $vendorOrder->clando_phone ?? 'Non renseigné' }}
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                @endif
+
+@endforeach
 
                         </div>
 
